@@ -4,7 +4,7 @@ import spacy
 import textstat
 from lexicalrichness import LexicalRichness
 
-
+# TODO create a super class and refactor child classes
 
 class NewselaDataset:
     def __init__(self, data_dir, metadata_path, limit=None):
