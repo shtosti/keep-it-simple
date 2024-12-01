@@ -106,31 +106,36 @@ class WikiLargeDataset:
 
     def load_data(self):
         # File paths
-        train_src_path = f"{self.base_path}/{self.base_filename}train.src"
-        train_dst_path = f"{self.base_path}/{self.base_filename}train.dst"
-        test_src_path = f"{self.base_path}/{self.base_filename}test.src"
-        test_dst_path = f"{self.base_path}/{self.base_filename}test.dst"
+        # train_src_path = f"{self.base_path}/{self.base_filename}train.src"
+        # train_dst_path = f"{self.base_path}/{self.base_filename}train.dst"
+        # test_src_path = f"{self.base_path}/{self.base_filename}test.src"
+        # test_dst_path = f"{self.base_path}/{self.base_filename}test.dst"
         valid_src_path = f"{self.base_path}/{self.base_filename}valid.src"
         valid_dst_path = f"{self.base_path}/{self.base_filename}valid.dst"
 
         # Read data
-        with open(train_src_path, "r") as src, open(train_dst_path, "r") as dst:
-            train_src = src.readlines()
-            train_dst = dst.readlines()
-        with open(test_src_path, "r") as src, open(test_dst_path, "r") as dst:
-            test_src = src.readlines()
-            test_dst = dst.readlines()
+        # with open(train_src_path, "r") as src, open(train_dst_path, "r") as dst:
+        #     train_src = src.readlines()
+        #     train_dst = dst.readlines()
+        # with open(test_src_path, "r") as src, open(test_dst_path, "r") as dst:
+        #     test_src = src.readlines()
+        #     test_dst = dst.readlines()
         with open(valid_src_path, "r") as src, open(valid_dst_path, "r") as dst:
             valid_src = src.readlines()
             valid_dst = dst.readlines()
 
-        # Create DataFrames for each split
-        train_df = pd.DataFrame({"source": train_src, "target": train_dst, "split": "train"})
-        test_df = pd.DataFrame({"source": test_src, "target": test_dst, "split": "test"})
+        # # Create DataFrames for each split
+        # train_df = pd.DataFrame({"source": train_src, "target": train_dst, "split": "train"})
+        # test_df = pd.DataFrame({"source": test_src, "target": test_dst, "split": "test"})
         valid_df = pd.DataFrame({"source": valid_src, "target": valid_dst, "split": "valid"})
 
+        # Remove rows where 'source' or 'target' are empty or consist only of whitespace
+        valid_df = valid_df[valid_df["source"].str.strip().astype(bool)]
+        valid_df = valid_df[valid_df["target"].str.strip().astype(bool)]
+
         # Concatenate all DataFrames
-        self.data_df = pd.concat([train_df, test_df, valid_df], ignore_index=True)
+        # self.data_df = pd.concat([train_df, test_df, valid_df], ignore_index=True) # TODO change when using the whole dataset
+        self.data_df = valid_df
 
     def word_count_spacy(self, text):
         doc = self.nlp(text)
@@ -151,9 +156,15 @@ class WikiLargeDataset:
 
     def measure_type_token_ratio(self, text):
         lex = LexicalRichness(text)
+        if lex.words == 0:
+            return 0 
         return lex.ttr 
 
     def apply_metrics(self):
+
+        self.data_df = self.data_df[self.data_df["source"].str.strip().astype(bool)]
+        self.data_df = self.data_df[self.data_df["target"].str.strip().astype(bool)]
+
         self.data_df["num_tokens_source"] = self.data_df["source"].apply(self.word_count_spacy)
         self.data_df["num_sentences_source"] = self.data_df["source"].apply(self.sentence_count_spacy)
         self.data_df["num_characters_source"] = self.data_df["source"].apply(self.character_count)
