@@ -192,3 +192,78 @@ class WikiLargeDataset:
             log_file.write("\n\nSplit Counts:\n")
             log_file.write(str(self.data_df["split"].value_counts()))
         print(f"Log saved to {log_file_path}")
+
+
+class MedEASiDataset:
+    def __init__(self, file_path):
+        self.file_path = file_path
+        self.nlp = spacy.load("en_core_web_sm")  # English model
+        self.data_df = pd.DataFrame()
+
+    def load_data(self):
+        # Load the dataset
+        self.data_df = pd.read_csv(self.file_path)
+
+        # Ensure 'source' and 'target' columns align with Med-EASi
+        self.data_df = self.data_df.rename(columns={"Expert": "source", "Simple": "target"})
+
+        # Remove rows where 'source' or 'target' are empty or consist only of whitespace
+        self.data_df = self.data_df[self.data_df["source"].str.strip().astype(bool)]
+        self.data_df = self.data_df[self.data_df["target"].str.strip().astype(bool)]
+
+    def word_count_spacy(self, text):
+        doc = self.nlp(text)
+        return len([token.text for token in doc])
+
+    def sentence_count_spacy(self, text):
+        doc = self.nlp(text)
+        return len(list(doc.sents))
+
+    def character_count(self, text):
+        return len(text)
+
+    def measure_flesh_reading_ease(self, text):
+        return textstat.flesch_reading_ease(text)
+
+    def measure_difficult_words(self, text):
+        return textstat.difficult_words(text)
+
+    def measure_type_token_ratio(self, text):
+        lex = LexicalRichness(text)
+        if lex.words == 0:
+            return 0
+        return lex.ttr
+
+    def apply_metrics(self):
+        # Filter out rows where 'source' or 'target' are empty (safety measure)
+        self.data_df = self.data_df[self.data_df["source"].str.strip().astype(bool)]
+        self.data_df = self.data_df[self.data_df["target"].str.strip().astype(bool)]
+
+        # Apply metrics to the source and target columns
+        self.data_df["num_tokens_source"] = self.data_df["source"].apply(self.word_count_spacy)
+        self.data_df["num_sentences_source"] = self.data_df["source"].apply(self.sentence_count_spacy)
+        self.data_df["num_characters_source"] = self.data_df["source"].apply(self.character_count)
+        self.data_df["flesh_reading_ease_source"] = self.data_df["source"].apply(self.measure_flesh_reading_ease)
+        self.data_df["difficult_words_source"] = self.data_df["source"].apply(self.measure_difficult_words)
+        self.data_df["type_token_ratio_source"] = self.data_df["source"].apply(self.measure_type_token_ratio)
+
+        self.data_df["num_tokens_target"] = self.data_df["target"].apply(self.word_count_spacy)
+        self.data_df["num_sentences_target"] = self.data_df["target"].apply(self.sentence_count_spacy)
+        self.data_df["num_characters_target"] = self.data_df["target"].apply(self.character_count)
+        self.data_df["flesh_reading_ease_target"] = self.data_df["target"].apply(self.measure_flesh_reading_ease)
+        self.data_df["difficult_words_target"] = self.data_df["target"].apply(self.measure_difficult_words)
+        self.data_df["type_token_ratio_target"] = self.data_df["target"].apply(self.measure_type_token_ratio)
+
+    def save_to_csv(self, file_path):
+        self.data_df.to_csv(file_path, index=False)
+        print(f"Data successfully saved to {file_path}")
+
+    def save_log(self, log_file_path):
+        with open(log_file_path, "w") as log_file:
+            log_file.write("DataFrame Info:\n")
+            self.data_df.info(buf=log_file)
+            log_file.write("\n\nDataFrame Describe:\n")
+            self.data_df.describe(include="all").to_string(buf=log_file)
+            log_file.write("\n\nSplit Counts:\n")
+            log_file.write(str(self.data_df["split"].value_counts()))
+        print(f"Log saved to {log_file_path}")
