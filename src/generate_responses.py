@@ -30,10 +30,19 @@ def main():
     with open("./data/prompts/prompts.json", "r") as file:
         prompts = json.load(file)
 
-    # TODO modify as needed
-    prompt_category = "fkgl"
-    prompt_id = "11"
-    prompt = prompts[prompt_category][prompt_id]
+    prompt_postfix = ""
+    prompt_category = "explanation"
+    prompt_id = "v2"
+
+    with_justification = True # TODO update if needed
+    if with_justification:
+        justification = prompts["justification"][prompt_category]
+        prompt = prompts[prompt_category][prompt_id]
+        prompt += " "
+        prompt += justification
+        prompt_postfix = "_justification"
+    else:
+        prompt = prompts[prompt_category][prompt_id]
     print(prompt)
 
     # TODO setup iteration over our datasets
@@ -47,7 +56,7 @@ def main():
     print(output_data)
 
     # Save the result to a JSON file
-    output_file = f"./output/{prompt_category}_{prompt_id}.json"
+    output_file = f"./output/{prompt_category}_{prompt_id}{prompt_postfix}.json"
     with open(output_file, "w") as file:
         json.dump(output_data, file, indent=4)
 
