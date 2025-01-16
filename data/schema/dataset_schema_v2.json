@@ -1,24 +1,24 @@
 {
     "id": "unique-instance-id",
-    "source": {
+    "meta-data": {
       "dataset_name": "string",
       "domain": "string",
-      "language": "string"
+      "language": "string",
+      "human_or_ats": "string"
     },
     "alignment": {
-      "level": "string",
+      "simplification_level": "string_paragraph_or_sentence",
+      "CEFR_level":"string",
       "source_text": "string",
       "simplifications": [
         {
           "simplified_text": "string",
-          "grade_level": "integer",
-          "simplification_level": "string",
           "control_attributes": {
             "readability": "float",
             "length_ratio": "float",
-            "vocabulary_level": "string",
             "grade_level": "integer",
-            "other": "string"
+            "other": "string",
+            "simplification_level": "string"
           },
           "dimensions": {
             "linguistic": {
@@ -28,7 +28,6 @@
             },
             "information": {
               "explanation": "bool",
-              "condensation": "bool",
               "omission": "bool",
               "other": "bool"
             }
@@ -36,10 +35,7 @@
           "evaluation_scores": {
             "bleu": "float",
             "rouge": "float",
-            "sari": "float",
-            "other": {
-              "metric_name": "float"
-            }
+            "sari": "float"
           },
           "annotations": {
             "human": "bool",
